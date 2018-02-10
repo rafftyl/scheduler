@@ -49,10 +49,14 @@ void Population::Breed()
 	{
 		size_t parentIndex_1 = uniformInt(rng);
 		size_t parentIndex_2 = uniformInt(rng);
-		float crossoverParam = uniformFloat(rng);
-		if (crossoverParam < crossoverProbability)
+
+		if (uniformFloat(rng) < crossoverProbability)
 		{
 			newPopulation.push_back(chromosomes[parentIndices[parentIndex_1]]->Crossover(*chromosomes[parentIndices[parentIndex_2]]));
+			if (uniformFloat(rng) < mutationProbability)
+			{
+				newPopulation.back()->Mutate();
+			}
 		}
 		else
 		{
@@ -68,7 +72,7 @@ void Population::Breed()
 		}
 	}
 
-	chromosomes = newPopulation;
+	chromosomes = std::move(newPopulation);
 }
 
 const Chromosome* Population::GetBestChromosome() const

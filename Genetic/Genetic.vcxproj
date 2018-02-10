@@ -117,12 +117,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Chromosome.h" />
-    <ClInclude Include="GeneticAlgorithm.h" />
     <ClInclude Include="Population.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Chromosome.cpp" />
-    <ClCompile Include="GeneticAlgorithm.cpp" />
     <ClCompile Include="Population.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

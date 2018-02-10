@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GeneticAlgorithm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -26,9 +23,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GeneticAlgorithm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Population.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

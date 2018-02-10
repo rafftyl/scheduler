@@ -16,7 +16,7 @@ void Chromosome::ResetFitnessComputedFlag()
 	isFitnessComputed = false;
 }
 
-const std::vector<float>& Chromosome::GetOrComputeFitness(FitnessFunction fitnessFunction)
+const std::vector<float>& Chromosome::GetOrComputeFitness(FitnessFunction fitnessFunction) const
 {
 	if (!isFitnessComputed)
 	{

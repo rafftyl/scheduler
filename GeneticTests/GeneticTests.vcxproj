@@ -164,6 +164,11 @@
     </ClCompile>
     <ClCompile Include="GeneticTests.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Genetic\Genetic.vcxproj">
+      <Project>{9beb3d11-8b4f-46af-826e-65851f3a4934}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -5,11 +5,11 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace SchedulerTests
 {		
-	TEST_CLASS(UnitTest1)
+	TEST_CLASS(SchedulerTest)
 	{
 	public:
 		
-		TEST_METHOD(TestMethod1)
+		TEST_METHOD(DataInput)
 		{
 			// TODO: Your test code here
 		}

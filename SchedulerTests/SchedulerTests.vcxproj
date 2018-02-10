@@ -164,6 +164,11 @@
     </ClCompile>
     <ClCompile Include="SchedulerTests.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Scheduler\Scheduler.vcxproj">
+      <Project>{5beb693a-a349-4a17-a6a9-02732372fb48}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
