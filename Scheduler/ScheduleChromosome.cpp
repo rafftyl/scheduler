@@ -3,8 +3,8 @@
 #include <sstream>
 #include <iomanip>
 
-ScheduleChromosome::ScheduleChromosome(int dataSize, float start, float end, float granularity, std::mt19937& rng) :
-	dataSize(dataSize), startTime(start), endTime(end), granularity(granularity), rng(rng)
+ScheduleChromosome::ScheduleChromosome(int dataSize, std::mt19937& rng) :
+	dataSize(dataSize), rng(rng)
 {
 }
 
@@ -19,20 +19,8 @@ void ScheduleChromosome::Mutate()
 	{
 		if (dist(rng) == 0)
 		{
-			data[i] += granularity;
-		}
-		else
-		{
-			data[i] -= granularity;
-		}
-		if (data[i] < startTime)
-		{
-			data[i] = startTime;
-		}
-		else if (data[i] > endTime)
-		{
-			data[i] = endTime;
-		}
+			data[i] = !data[i];
+		}		
 	}
 }
 
@@ -42,7 +30,7 @@ std::unique_ptr<Chromosome> ScheduleChromosome::Crossover(const Chromosome& othe
 	std::random_device rd;
 	std::mt19937 rng(rd());
 	std::uniform_int_distribution<int> dist(0, 1);
-	auto result = std::make_unique<ScheduleChromosome>(dataSize, startTime, endTime, granularity, rng);
+	auto result = std::make_unique<ScheduleChromosome>(dataSize, rng);
 	result->data.resize(dataSize);
 	for (size_t i = 0; i < data.size(); ++i)
 	{
@@ -66,10 +54,10 @@ std::unique_ptr<Chromosome> ScheduleChromosome::Clone() const
 void ScheduleChromosome::Randomize()
 {
 	data.resize(dataSize);
-	std::uniform_real_distribution<float> dist(startTime, endTime);
+	std::uniform_int_distribution<int> dist(0, 1);
 	for (size_t i = 0; i < data.size(); ++i)
 	{
-		data[i] = dist(rng);
+		data[i] = (dist(rng) == 0);
 	}
 }
 
@@ -78,7 +66,7 @@ std::string ScheduleChromosome::ToString() const
 	std::stringstream ss;
 	for (float dat : data)
 	{
-		ss << dat << ", ";
+		ss << (dat ? true : false) << ", ";
 	}
 	return ss.str();
 }
@@ -88,22 +76,22 @@ std::string ScheduleChromosome::Decode(const ScheduleChromosome& scheduleChrom, 
 	std::stringstream ss;
 	for (size_t employeeInd = 0; employeeInd < employeeNames.size(); ++employeeInd)
 	{
+		int workdays = 0;
 		ss << employeeNames[employeeInd] << ": " << std::endl;
 		for (int day = 0; day < dayCount; ++day)
 		{
-			int startIndex = 2 * (day * employeeNames.size() + employeeInd);
-			float minHour = scheduleChrom.data[startIndex];
-			float maxHour = scheduleChrom.data[startIndex + 1];
-			if (maxHour - minHour > scheduleChrom.granularity)
+			int dataIndex = day * employeeNames.size() + employeeInd;
+			if (scheduleChrom.data[dataIndex])
 			{
-				ss << "Day " << day << ": " << std::setprecision(2) << minHour << " - " << maxHour << std::endl;
+				workdays++;
+				ss << "Day " << day + 1 << ": " << "10 - 21" << std::endl;
 			}
 			else
 			{
-				ss << "Day " << day << ": " << "-" << std::endl;
+				ss << "Day " << day + 1 << ": " << "-" << std::endl;
 			}
 		}
-		ss << std::endl;
+		ss << "Workdays: " << workdays << std::endl << std::endl;
 	}
 
 	return ss.str();

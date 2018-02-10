@@ -92,6 +92,30 @@ const Chromosome* Population::GetBestChromosome() const
 	return chromosomes[index].get();
 }
 
+std::vector<const Chromosome*> Population::GetBestChromosomes() const
+{
+	auto domRanks = ComputeDominationRanks();
+	int minDom = static_cast<int>(chromosomes.size());
+	for (size_t i = 0; i < domRanks.size(); ++i)
+	{
+		if (domRanks[i] < minDom)
+		{
+			minDom = domRanks[i];
+		}
+	}
+
+	std::vector<const Chromosome*> result;
+	for (size_t i = 0; i < domRanks.size(); ++i)
+	{
+		if (domRanks[i] == minDom)
+		{
+			result.push_back(chromosomes[i].get());
+		}
+	}
+
+	return result;
+}
+
 std::vector<int> Population::ComputeDominationRanks() const
 {	
 	size_t popSize = chromosomes.size();

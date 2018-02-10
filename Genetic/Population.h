@@ -23,6 +23,7 @@ public:
 
 	void Breed();
 	const Chromosome* GetBestChromosome() const;
+	std::vector<const Chromosome*> GetBestChromosomes() const;
 private:
 	std::vector<int> ComputeDominationRanks() const;
 };

@@ -7,13 +7,10 @@ class ScheduleChromosome : public Chromosome
 {	
 public:
 	int dataSize;
-	float startTime;
-	float endTime;
-	float granularity;
-	std::vector<float> data;
+	std::vector<bool> data;
 	std::mt19937& rng;
 
-	ScheduleChromosome(int dataSize, float start, float end, float granularity, std::mt19937& rng);
+	ScheduleChromosome(int dataSize, std::mt19937& rng);
 	ScheduleChromosome(const ScheduleChromosome& other) = default;
 	~ScheduleChromosome();
 
