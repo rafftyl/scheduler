@@ -2,117 +2,58 @@
 //
 
 #include "stdafx.h"
+#include "ScheduleChromosome.h"
 #include "../Genetic/Population.h"
 #include <iostream>
 #include <sstream>
 
-class TestChromosome : public Chromosome
-{	
-public:
-	static int mutationCount;
-	static int crossoverCount;
-	std::vector<float> data;
-
-	TestChromosome() : Chromosome()
-	{
-
-	}
-
-	TestChromosome(const TestChromosome& other) = default;
-
-	virtual void Mutate() override
-	{
-		mutationCount++;
-		for (float& val : data)
-		{
-			val += static_cast<float>(rand()) / RAND_MAX;
-		}
-	}
-
-	virtual std::unique_ptr<Chromosome> Crossover(const Chromosome& other) const override
-	{
-		crossoverCount++;
-		auto& typedOther = static_cast<const TestChromosome&>(other);
-		std::random_device rd;
-		std::mt19937 rng(rd());
-		std::uniform_int_distribution<int> dist(0, 1);
-		auto result = std::make_unique<TestChromosome>();
-		result->data.resize(15);
-		for (size_t i = 0; i < data.size(); ++i)
-		{
-			if (dist(rd) == 0)
-			{
-				result->data[i] = data[i];
-			}
-			else
-			{
-				result->data[i] = typedOther.data[i];
-			}
-		}
-		return result;
-	}
-
-	virtual std::unique_ptr<Chromosome> Clone() const override
-	{
-		return std::make_unique<TestChromosome>(*this);
-	}
-
-	virtual void Randomize() override
-	{
-		data.resize(15);
-		for (float& val : data)
-		{
-			val = static_cast<float>(rand()) / RAND_MAX;
-		}
-	}
-
-	virtual std::string ToString() const override
-	{
-		std::stringstream ss;
-		for (float val : data)
-		{
-			ss << val << ", ";
-		}
-		return ss.str();
-	}
-
-	bool operator==(const TestChromosome& other) const
-	{
-		return data == other.data;
-	}
-};
-
-int TestChromosome::mutationCount;
-int TestChromosome::crossoverCount;
-
 int main()
 {
+	float startTime = 10;
+	float endTime = 21;
+	float granularity = 1;
+	int workingDayCount = 7;
+	int employeeCount = 2;
+	int employeesNeeded = 4;
+
 	FitnessFunction fitness =
 		[&](const Chromosome& chrom)
 	{
-		auto& typedChrom = static_cast<const TestChromosome&>(chrom);
+		auto& typedChrom = static_cast<const ScheduleChromosome&>(chrom);
 		float sum = 0;
-		for (float val : typedChrom.data)
+		int freeDays = 0;
+		for (int emp = 0; emp < employeeCount; ++emp)
 		{
-			sum += val;
+			for (int day = 0; day < workingDayCount; ++day)
+			{
+				int startIndex = 2 * (day * employeeCount + emp);
+				float minHour = typedChrom.data[startIndex];
+				float maxHour = typedChrom.data[startIndex + 1];
+				float workTime = maxHour - minHour;
+				sum += workTime;
+				if (workTime < typedChrom.granularity)
+				{
+					freeDays++;
+				}
+			}
 		}
-		return std::vector<float>{sum};
+		return std::vector<float>{sum, static_cast<float>(freeDays)};
 	};
-	TestChromosome::mutationCount = 0;
-	TestChromosome::crossoverCount = 0;
+	
+	std::vector<std::string> employeeNames{ "emp_1", "emp_2" };
 
-	Population pop(100, 7, TestChromosome(), fitness);
-	auto best = pop.GetBestChromosome();
-	auto maxFitness_1 = best->GetOrComputeFitness(fitness);
-	std::cout << best->ToString() << "\t" << maxFitness_1[0] << std::endl << std::endl;
-	for (int i = 0; i < 200; ++i)
+	int dataSize = workingDayCount * employeeCount * 2;
+
+	std::random_device rd;
+	std::mt19937 rng(rd());
+
+	ScheduleChromosome chrom(dataSize, startTime, endTime, granularity, rng);
+	Population pop(250, 7, chrom, fitness);
+	for (int i = 0; i < 500; ++i)
 	{
 		pop.Breed();
 	}
-	best = pop.GetBestChromosome();
-	auto maxFitness_2 = best->GetOrComputeFitness(fitness);
-	std::cout << best->ToString() << "\t" << maxFitness_2[0] << std::endl << std::endl;
-	std::cout << TestChromosome::mutationCount << " " << TestChromosome::crossoverCount;
+	std::cout << ScheduleChromosome::Decode(*static_cast<const ScheduleChromosome*>(pop.GetBestChromosome()), employeeNames, workingDayCount);
 	getchar();
 }
 

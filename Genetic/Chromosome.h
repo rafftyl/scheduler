@@ -13,7 +13,7 @@ private:
 	mutable std::vector<float> cachedFitness;
 public:
 	Chromosome();
-	~Chromosome();
+	virtual ~Chromosome();
 
 	void ResetFitnessComputedFlag();
 	const std::vector<float>& GetOrComputeFitness(FitnessFunction fitnessFunction) const;
