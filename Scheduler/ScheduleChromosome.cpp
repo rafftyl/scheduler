@@ -14,14 +14,9 @@ ScheduleChromosome::~ScheduleChromosome()
 
 void ScheduleChromosome::Mutate()
 {
-	std::uniform_int_distribution<int> dist(0, 1);
-	for(size_t i = 0; i < data.size(); ++i)
-	{
-		if (dist(rng) == 0)
-		{
-			data[i] = !data[i];
-		}		
-	}
+	std::uniform_int_distribution<int> dist(0, data.size());
+	int index = dist(rng);
+	data[index] = !data[index];
 }
 
 std::unique_ptr<Chromosome> ScheduleChromosome::Crossover(const Chromosome& other) const
