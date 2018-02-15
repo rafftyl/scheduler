@@ -73,13 +73,6 @@ int main()
 				spuriousMandays += employees - employeesNeeded;
 			}
 		}
-
-		if (daysCovered < workingDayCount)
-		{
-			cost = 1e10f;
-			streakDayPenalty = 1e10f;
-			spuriousMandays = 1e10f;
-		}
 	
 		return std::vector<float>{static_cast<float>(daysCovered), static_cast<float>(-spuriousMandays), static_cast<float>(-cost), -streakDayPenalty};
 	};
@@ -90,15 +83,15 @@ int main()
 	std::mt19937 rng(rd());
 
 	ScheduleChromosome chrom(dataSize, rng);
-	Population pop(1000, 7, chrom, fitness);
-	for (int i = 0; i < 1000; ++i)
+	Population pop(500, 7, chrom, fitness);
+	for (int i = 0; i < 200; ++i)
 	{
 		pop.Breed();
 	}
 	auto chroms = pop.GetBestChromosomes();
 	auto iter = std::remove_if(chroms.begin(), chroms.end(), [&](const Chromosome* a) -> bool
 	{
-		return a->GetOrComputeFitness(fitness)[1] < 0;
+		return a->GetOrComputeFitness(fitness)[0] < workingDayCount;
 	});
 	chroms.erase(iter, chroms.end());
 	std::sort(chroms.begin(), chroms.end(),

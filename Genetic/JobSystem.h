@@ -17,6 +17,7 @@ public:
 	WorkerThread(std::queue<std::function<void()>>& jobQueue, std::mutex& jobQueueMutex);
 	WorkerThread(WorkerThread&& other) = default;
 	~WorkerThread();
+	void Start();
 	void Join();
 	bool IsBusy() const;
 	void SetBusy(bool busy);
@@ -32,6 +33,7 @@ private:
 public:
 	JobScheduler(int workerCount = 6);
 	~JobScheduler();
+	void Init();
 	void WaitForCompletion() const;
 	void ScheduleJob(std::function<void()> job);
 	void SetPaused(bool pause);

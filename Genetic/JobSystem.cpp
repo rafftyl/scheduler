@@ -3,6 +3,15 @@
 
 WorkerThread::WorkerThread(std::queue<std::function<void()>>& jobQueue, std::mutex& jobQueueMutex) : jobs(jobQueue), jobQueueMutex(jobQueueMutex)
 {
+}
+
+WorkerThread::~WorkerThread()
+{
+	Join();	
+}
+
+void WorkerThread::Start()
+{
 	auto workerThreadFunction = [this]()
 	{
 		while (!shouldFinish)
@@ -30,15 +39,13 @@ WorkerThread::WorkerThread(std::queue<std::function<void()>>& jobQueue, std::mut
 	thread = std::thread(workerThreadFunction);
 }
 
-WorkerThread::~WorkerThread()
-{
-	Join();	
-}
-
 void WorkerThread::Join()
 {
-	shouldFinish = true;
-	thread.join();
+	if (thread.joinable())
+	{
+		shouldFinish = true;
+		thread.join();
+	}
 }
 
 bool WorkerThread::IsBusy() const
@@ -66,6 +73,14 @@ JobScheduler::JobScheduler(int workerCount)
 
 JobScheduler::~JobScheduler()
 {
+}
+
+void JobScheduler::Init()
+{
+	for (auto& worker : workerThreads)
+	{
+		worker.Start();
+	}
 }
 
 void JobScheduler::WaitForCompletion() const

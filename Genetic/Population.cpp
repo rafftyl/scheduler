@@ -14,6 +14,8 @@ Population::Population(int size, int tournamentSize, Chromosome& templateChromos
 		chromosomes.push_back(templateChromosome.Clone());
 		chromosomes.back()->Randomize();
 	}	
+
+	jobScheduler.Init();
 }
 
 Population::~Population()
@@ -27,7 +29,7 @@ void Population::Breed()
 	std::vector<size_t> parentIndices;
 	parentIndices.reserve(chromosomes.size());
 
-	jobScheduler.SetPaused(true);
+	/*jobScheduler.SetPaused(true);
 	auto job = [&domRanks, &parentIndices, this]()
 	{
 		size_t winnerIndex = 0;
@@ -41,14 +43,28 @@ void Population::Breed()
 				winnerIndex = competitorIndex;
 			}
 		}
+		std::scoped_lock<std::mutex> lock(collectionModMutex);
 		parentIndices.push_back(winnerIndex);
-	};
+	};*/
 	for (size_t i = 0; i < chromosomes.size(); ++i)
 	{
-		
+		size_t winnerIndex = 0;
+		int minDomRank = static_cast<int>(chromosomes.size());
+		for (int t = 0; t < tournamentSize; ++t)
+		{
+			size_t competitorIndex = uniformInt(rng);
+			if (domRanks[competitorIndex] < minDomRank)
+			{
+				minDomRank = domRanks[competitorIndex];
+				winnerIndex = competitorIndex;
+			}
+		}
+		//std::scoped_lock<std::mutex> lock(collectionModMutex);
+		parentIndices.push_back(winnerIndex);
+		//jobScheduler.ScheduleJob(job);
 	}
-	jobScheduler.SetPaused(false);
-	jobScheduler.WaitForCompletion();
+	/*jobScheduler.SetPaused(false);
+	jobScheduler.WaitForCompletion();*/
 
 	std::vector<std::unique_ptr<Chromosome>> newPopulation;
 	newPopulation.reserve(chromosomes.size());
