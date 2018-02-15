@@ -1,11 +1,9 @@
 #include "Population.h"
 
-Population::Population()
-{
-}
-
 Population::Population(int size, int tournamentSize, Chromosome& templateChromosome, FitnessFunction fitnessFunction, float mutationProb, float crossoverProb) :
-	tournamentSize(tournamentSize), fitnessFunction(fitnessFunction), mutationProbability(mutationProb), crossoverProbability(crossoverProb)
+	tournamentSize(tournamentSize), fitnessFunction(fitnessFunction),
+	mutationProbability(mutationProb), crossoverProbability(crossoverProb),
+	jobScheduler(6)
 {
 	std::random_device rd;
 	rng = std::mt19937(rd());
@@ -15,7 +13,7 @@ Population::Population(int size, int tournamentSize, Chromosome& templateChromos
 	{
 		chromosomes.push_back(templateChromosome.Clone());
 		chromosomes.back()->Randomize();
-	}
+	}	
 }
 
 Population::~Population()
@@ -25,11 +23,12 @@ Population::~Population()
 void Population::Breed()
 {
 	auto domRanks = ComputeDominationRanks();
-	std::vector<std::unique_ptr<Chromosome>> newPopulation;
-	newPopulation.reserve(chromosomes.size());
+
 	std::vector<size_t> parentIndices;
 	parentIndices.reserve(chromosomes.size());
-	for (size_t i = 0; i < chromosomes.size(); ++i)
+
+	jobScheduler.SetPaused(true);
+	auto job = [&domRanks, &parentIndices, this]()
 	{
 		size_t winnerIndex = 0;
 		int minDomRank = static_cast<int>(chromosomes.size());
@@ -43,8 +42,16 @@ void Population::Breed()
 			}
 		}
 		parentIndices.push_back(winnerIndex);
+	};
+	for (size_t i = 0; i < chromosomes.size(); ++i)
+	{
+		
 	}
+	jobScheduler.SetPaused(false);
+	jobScheduler.WaitForCompletion();
 
+	std::vector<std::unique_ptr<Chromosome>> newPopulation;
+	newPopulation.reserve(chromosomes.size());
 	for (size_t i = 0; i < chromosomes.size(); ++i)
 	{
 		size_t parentIndex_1 = uniformInt(rng);

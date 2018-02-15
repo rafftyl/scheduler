@@ -10,10 +10,11 @@
 int main()
 {
 	std::vector<std::string> employeeNames{ "emp_1", "emp_2", "emp_3", "emp_4", "emp_5"};
-	std::vector<int> maxDaysPerEmployee{ 18, 18, 18, 18, 16};
-	int workingDayCount = 31;
+	std::vector<int> maxDaysPerEmployee{ 10, 10, 10, 10, 8};
+	std::vector<int> staffNeededPerDay{ 3,3,4,4,4,4,4 };
+	int workingDayCount = 14;
 	int employeeCount = employeeNames.size();
-	int employeesNeeded = 4;
+	int employeesNeeded = 3;
 	int initDay = 3;
 
 	FitnessFunction fitness =
@@ -21,7 +22,6 @@ int main()
 	{
 		auto& typedChrom = static_cast<const ScheduleChromosome&>(chrom);
 		int daysCovered = 0;
-		int freeDays = 0;
 		int spuriousMandays = 0;
 		int cost = 0;
 		float streakDayPenalty = 0;
@@ -58,28 +58,30 @@ int main()
 				{
 					workedPrevDay[emp] = false;
 					streakDays[emp] = 0;
-					++freeDays;
 				}
 			}			
 
 			int offsetDay = day + initDay;
-			int needed = (offsetDay % 7 == 0 || offsetDay % 7 == 1) ? employeesNeeded - 1 : employeesNeeded;
-			if (employees >= employeesNeeded)
+			int dayOfAWeek = offsetDay % 7;
+			int needed = staffNeededPerDay[dayOfAWeek];
+			if (employees == needed)
 			{
-				++daysCovered;
-				if (employees > employeesNeeded)
-				{
-					spuriousMandays += employees - employeesNeeded;
-				}
+				++daysCovered;				
+			}
+			else if(employees > employeesNeeded)
+			{
+				spuriousMandays += employees - employeesNeeded;
 			}
 		}
+
 		if (daysCovered < workingDayCount)
 		{
-			freeDays = 0;
-			streakDayPenalty = 1e20;
+			cost = 1e10f;
+			streakDayPenalty = 1e10f;
+			spuriousMandays = 1e10f;
 		}
 	
-		return std::vector<float>{static_cast<float>(daysCovered), static_cast<float>(-spuriousMandays), static_cast<float>(freeDays), static_cast<float>(-cost), -streakDayPenalty};
+		return std::vector<float>{static_cast<float>(daysCovered), static_cast<float>(-spuriousMandays), static_cast<float>(-cost), -streakDayPenalty};
 	};
 
 	int dataSize = workingDayCount * employeeCount;
@@ -88,17 +90,27 @@ int main()
 	std::mt19937 rng(rd());
 
 	ScheduleChromosome chrom(dataSize, rng);
-	Population pop(500, 7, chrom, fitness);
-	for (int i = 0; i < 200; ++i)
+	Population pop(1000, 7, chrom, fitness);
+	for (int i = 0; i < 1000; ++i)
 	{
 		pop.Breed();
 	}
 	auto chroms = pop.GetBestChromosomes();
+	auto iter = std::remove_if(chroms.begin(), chroms.end(), [&](const Chromosome* a) -> bool
+	{
+		return a->GetOrComputeFitness(fitness)[1] < 0;
+	});
+	chroms.erase(iter, chroms.end());
+	std::sort(chroms.begin(), chroms.end(),
+	[&](const Chromosome* a, const Chromosome* b) -> bool
+	{
+		return a->GetOrComputeFitness(fitness)[2] > b->GetOrComputeFitness(fitness)[2];
+	});
 	size_t chromIndex = 0;
 	while (chromIndex < chroms.size())
 	{
 		system("cls");
-		std::cout << "Schedule with " << chroms[chromIndex]->GetOrComputeFitness(fitness)[0] << " days fully covered and " << chroms[chromIndex]->GetOrComputeFitness(fitness)[1] << " spurious mandays: " << std::endl;
+		std::cout << "Schedule with " << chroms[chromIndex]->GetOrComputeFitness(fitness)[0] << " days fully covered:"<< std::endl;
 		std::cout << ScheduleChromosome::Decode(*static_cast<const ScheduleChromosome*>(chroms[chromIndex]), employeeNames, workingDayCount);
 		getchar();
 		chromIndex++;
