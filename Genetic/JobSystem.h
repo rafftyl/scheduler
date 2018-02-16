@@ -26,14 +26,16 @@ public:
 class JobScheduler
 {
 private:
+	unsigned int workerCount;
 	std::vector<WorkerThread> workerThreads;
 	std::queue<std::function<void()>> jobs;
 	std::mutex jobQueueMutex;
 public:
-	JobScheduler(int workerCount = 6);
+	JobScheduler(unsigned int workerCount = 6);
 	~JobScheduler();
 	void Init();
 	void Shutdown();
 	void WaitForCompletion();
 	void ScheduleJob(std::function<void()> job);
+	unsigned int GetWorkerCount() const;
 };

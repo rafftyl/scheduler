@@ -4,7 +4,7 @@
 Population::Population(int size, int tournamentSize, Chromosome& templateChromosome, FitnessFunction fitnessFunction, float mutationProb, float crossoverProb) :
 	tournamentSize(tournamentSize), fitnessFunction(fitnessFunction),
 	mutationProbability(mutationProb), crossoverProbability(crossoverProb),
-	jobScheduler(6), parentIndices(size, 0), dominationRanks(size, 0)
+	jobScheduler(std::thread::hardware_concurrency()), parentIndices(size, 0), dominationRanks(size, 0)
 {	
 	for (int i = 0; i < size; ++i)
 	{
@@ -22,7 +22,7 @@ Population::~Population()
 void Population::Breed()
 {
 	ComputeDominationRanks();	
-	const int jobCount = 6;
+	int jobCount = jobScheduler.GetWorkerCount();
 	size_t chromosomesPerJob = chromosomes.size() / jobCount;	
 	size_t popSize = static_cast<int>(chromosomes.size());
 

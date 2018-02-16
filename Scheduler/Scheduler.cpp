@@ -10,11 +10,11 @@
 int main()
 {
 	std::vector<std::string> employeeNames{ "emp_1", "emp_2", "emp_3", "emp_4", "emp_5"};
-	std::vector<int> maxDaysPerEmployee{ 10, 10, 10, 10, 8};
+	std::vector<int> maxDaysPerEmployee{ 6, 6, 6, 6, 4};
 	std::vector<int> staffNeededPerDay{ 3,3,4,4,4,4,4 };
 	int workingDayCount = 7;
 	int employeeCount = static_cast<int>(employeeNames.size());
-	int initDay = 3;
+	int initDay = 0;
 
 	FitnessFunction fitness =
 		[&](const Chromosome& chrom)
@@ -72,31 +72,25 @@ int main()
 			}
 		}
 	
-		return std::vector<float>{static_cast<float>(daysCovered), static_cast<float>(-spuriousMandays)};//, static_cast<float>(-overtime), -streakDayPenalty};
+		return std::vector<float>{static_cast<float>(daysCovered), static_cast<float>(-spuriousMandays), static_cast<float>(-overtime), -streakDayPenalty};
 	};
 
 	int dataSize = workingDayCount * employeeCount;
 	ScheduleChromosome chrom(dataSize);
-	Population pop(100, 7, chrom, fitness);
+	Population pop(50, 7, chrom, fitness);
 	
-	for (int i = 0; i < 250; ++i)
+	for (int i = 0; i < 10; ++i)
 	{
 		pop.Breed();
 	}
 	pop.StopComputation();
 
 	auto chroms = pop.GetBestChromosomes();
-	auto iter = std::remove_if(chroms.begin(), chroms.end(), [&](const Chromosome* a) -> bool
-	{
-		return a->GetOrComputeFitness(fitness)[1] < 0;
-	});
-	chroms.erase(iter, chroms.end());
-
-	/*std::sort(chroms.begin(), chroms.end(),
+	std::sort(chroms.begin(), chroms.end(),
 	[&](const Chromosome* a, const Chromosome* b) -> bool
 	{
-		return a->GetOrComputeFitness(fitness)[2] > b->GetOrComputeFitness(fitness)[2];
-	});*/
+		return a->GetOrComputeFitness(fitness)[0] > b->GetOrComputeFitness(fitness)[0];
+	});
 
 	size_t chromIndex = 0;
 	while (chromIndex < chroms.size())

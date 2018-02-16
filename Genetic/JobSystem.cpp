@@ -64,9 +64,9 @@ void WorkerThread::SetBusy(bool busy)
 	isBusy = busy;
 }
 
-JobScheduler::JobScheduler(int workerCount)
+JobScheduler::JobScheduler(unsigned int workerCount) : workerCount(workerCount)
 {
-	for (int i = 0; i < workerCount; ++i)
+	for (unsigned int i = 0; i < workerCount; ++i)
 	{
 		workerThreads.push_back(WorkerThread(jobs, jobQueueMutex));
 	}
@@ -122,5 +122,10 @@ void JobScheduler::ScheduleJob(std::function<void()> job)
 {
 	std::scoped_lock<std::mutex> lock(jobQueueMutex);
 	jobs.push(job);
+}
+
+unsigned int JobScheduler::GetWorkerCount() const
+{
+	return workerCount;
 }
 
