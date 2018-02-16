@@ -3,8 +3,7 @@
 #include <sstream>
 #include <iomanip>
 
-ScheduleChromosome::ScheduleChromosome(int dataSize, std::mt19937& rng) :
-	dataSize(dataSize), rng(rng)
+ScheduleChromosome::ScheduleChromosome(int dataSize) : dataSize(dataSize)
 {
 }
 
@@ -14,22 +13,18 @@ ScheduleChromosome::~ScheduleChromosome()
 
 void ScheduleChromosome::Mutate()
 {
-	std::uniform_int_distribution<int> dist(0, data.size());
-	int index = dist(rng);
+	size_t index = Random::Range<size_t>(0, data.size() - 1);
 	data[index] = !data[index];
 }
 
 std::unique_ptr<Chromosome> ScheduleChromosome::Crossover(const Chromosome& other) const
 {
 	auto& typedOther = static_cast<const ScheduleChromosome&>(other);
-	std::random_device rd;
-	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> dist(0, 1);
-	auto result = std::make_unique<ScheduleChromosome>(dataSize, rng);
+	auto result = std::make_unique<ScheduleChromosome>(dataSize);
 	result->data.resize(dataSize);
 	for (size_t i = 0; i < data.size(); ++i)
 	{
-		if (dist(rd) == 0)
+		if (Random::Range(0,1) == 0)
 		{
 			result->data[i] = data[i];
 		}
@@ -49,10 +44,9 @@ std::unique_ptr<Chromosome> ScheduleChromosome::Clone() const
 void ScheduleChromosome::Randomize()
 {
 	data.resize(dataSize);
-	std::uniform_int_distribution<int> dist(0, 1);
 	for (size_t i = 0; i < data.size(); ++i)
 	{
-		data[i] = (dist(rng) == 0);
+		data[i] = (Random::Range(0,1) == 0);
 	}
 }
 
@@ -75,7 +69,7 @@ std::string ScheduleChromosome::Decode(const ScheduleChromosome& scheduleChrom, 
 		ss << employeeNames[employeeInd] << ": " << std::endl;
 		for (int day = 0; day < dayCount; ++day)
 		{
-			int dataIndex = day * employeeNames.size() + employeeInd;
+			size_t dataIndex = day * employeeNames.size() + employeeInd;
 			if (scheduleChrom.data[dataIndex])
 			{
 				workdays++;

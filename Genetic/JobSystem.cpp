@@ -1,5 +1,6 @@
 #include "JobSystem.h"
 #include <algorithm>
+#include <iostream>
 
 WorkerThread::WorkerThread(std::queue<std::function<void()>>& jobQueue, std::mutex& jobQueueMutex) : jobs(jobQueue), jobQueueMutex(jobQueueMutex)
 {
@@ -16,21 +17,26 @@ void WorkerThread::Start()
 	{
 		while (!shouldFinish)
 		{
-			if (!isPaused && this->jobQueueMutex.try_lock())
+			if (!isPaused)
 			{
+				jobQueueMutex.lock();
 				std::function<void()> job;
 				if (jobs.size() > 0)
 				{
 					job = jobs.front();
 					jobs.pop();
 				}
-				this->jobQueueMutex.unlock();
-
+				
 				if (job != nullptr)
 				{
 					SetBusy(true);
+					jobQueueMutex.unlock();
 					job();
 					SetBusy(false);
+				}
+				else
+				{
+					jobQueueMutex.unlock();
 				}
 			}
 		}
@@ -58,11 +64,6 @@ void WorkerThread::SetBusy(bool busy)
 	isBusy = busy;
 }
 
-void WorkerThread::SetPaused(bool pause)
-{
-	isPaused = false;
-}
-
 JobScheduler::JobScheduler(int workerCount)
 {
 	for (int i = 0; i < workerCount; ++i)
@@ -73,6 +74,10 @@ JobScheduler::JobScheduler(int workerCount)
 
 JobScheduler::~JobScheduler()
 {
+	for (auto& worker : workerThreads)
+	{
+		worker.Join();
+	}
 }
 
 void JobScheduler::Init()
@@ -83,9 +88,34 @@ void JobScheduler::Init()
 	}
 }
 
-void JobScheduler::WaitForCompletion() const
+void JobScheduler::Shutdown()
 {
-	while (std::find_if(workerThreads.begin(), workerThreads.end(), [](const WorkerThread& worker) {return worker.IsBusy();}) != workerThreads.end());
+	for (auto& worker : workerThreads)
+	{
+		worker.Join();
+	}
+}
+
+void JobScheduler::WaitForCompletion()
+{
+	while (true)
+	{
+		if (jobQueueMutex.try_lock())
+		{
+			size_t jobsQueued = jobs.size();
+			jobQueueMutex.unlock();
+
+			if (jobsQueued == 0)
+			{
+				auto iter = std::find_if(workerThreads.begin(), workerThreads.end(),
+					[](const WorkerThread& worker) {return worker.IsBusy();});
+				if (iter == workerThreads.end())
+				{
+					return;
+				}
+			}
+		}
+	}
 }
 
 void JobScheduler::ScheduleJob(std::function<void()> job)
@@ -94,10 +124,3 @@ void JobScheduler::ScheduleJob(std::function<void()> job)
 	jobs.push(job);
 }
 
-void JobScheduler::SetPaused(bool pause)
-{
-	for (auto& thread : workerThreads)
-	{
-		thread.SetPaused(pause);
-	}
-}

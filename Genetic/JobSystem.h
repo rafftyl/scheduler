@@ -21,7 +21,6 @@ public:
 	void Join();
 	bool IsBusy() const;
 	void SetBusy(bool busy);
-	void SetPaused(bool pause);
 };
 
 class JobScheduler
@@ -34,7 +33,7 @@ public:
 	JobScheduler(int workerCount = 6);
 	~JobScheduler();
 	void Init();
-	void WaitForCompletion() const;
+	void Shutdown();
+	void WaitForCompletion();
 	void ScheduleJob(std::function<void()> job);
-	void SetPaused(bool pause);
 };

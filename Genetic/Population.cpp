@@ -1,20 +1,17 @@
 #include "Population.h"
+#include <iostream>
 
 Population::Population(int size, int tournamentSize, Chromosome& templateChromosome, FitnessFunction fitnessFunction, float mutationProb, float crossoverProb) :
 	tournamentSize(tournamentSize), fitnessFunction(fitnessFunction),
 	mutationProbability(mutationProb), crossoverProbability(crossoverProb),
-	jobScheduler(6)
-{
-	std::random_device rd;
-	rng = std::mt19937(rd());
-	uniformInt = std::uniform_int_distribution<size_t>(0, size - 1);
-	uniformFloat = std::uniform_real_distribution<float>(0.0f, 1.0f);
+	jobScheduler(6), parentIndices(size, 0), dominationRanks(size, 0)
+{	
 	for (int i = 0; i < size; ++i)
 	{
 		chromosomes.push_back(templateChromosome.Clone());
 		chromosomes.back()->Randomize();
+		newPopulation.push_back(nullptr);
 	}	
-
 	jobScheduler.Init();
 }
 
@@ -24,90 +21,100 @@ Population::~Population()
 
 void Population::Breed()
 {
-	auto domRanks = ComputeDominationRanks();
+	ComputeDominationRanks();	
+	const int jobCount = 6;
+	size_t chromosomesPerJob = chromosomes.size() / jobCount;	
+	size_t popSize = static_cast<int>(chromosomes.size());
 
-	std::vector<size_t> parentIndices;
-	parentIndices.reserve(chromosomes.size());
-
-	/*jobScheduler.SetPaused(true);
-	auto job = [&domRanks, &parentIndices, this]()
-	{
-		size_t winnerIndex = 0;
-		int minDomRank = static_cast<int>(chromosomes.size());
-		for (int t = 0; t < tournamentSize; ++t)
+	size_t parentsChosen = 0;
+	for (int i = 0; i < jobCount; ++i)
+	{		
+		size_t startIndex = i * chromosomesPerJob;
+		size_t chroms = (i == jobCount - 1) ? chromosomes.size() - parentsChosen : chromosomesPerJob;
+		auto job = [this, chroms, startIndex, popSize]()
 		{
-			size_t competitorIndex = uniformInt(rng);
-			if (domRanks[competitorIndex] < minDomRank)
+			for (size_t counter = 0; counter < chroms; ++counter)
 			{
-				minDomRank = domRanks[competitorIndex];
-				winnerIndex = competitorIndex;
+				size_t winnerIndex = 0;
+				int minDomRank = static_cast<int>(popSize);
+				for (int t = 0; t < tournamentSize; ++t)
+				{
+					size_t competitorIndex = Random::Range<size_t>(0, popSize - 1);
+					if (dominationRanks[competitorIndex] < minDomRank)
+					{
+						minDomRank = dominationRanks[competitorIndex];
+						winnerIndex = competitorIndex;
+					}
+				}				
+				parentIndices[startIndex + counter] = winnerIndex;
 			}
-		}
-		std::scoped_lock<std::mutex> lock(collectionModMutex);
-		parentIndices.push_back(winnerIndex);
-	};*/
-	for (size_t i = 0; i < chromosomes.size(); ++i)
-	{
-		size_t winnerIndex = 0;
-		int minDomRank = static_cast<int>(chromosomes.size());
-		for (int t = 0; t < tournamentSize; ++t)
-		{
-			size_t competitorIndex = uniformInt(rng);
-			if (domRanks[competitorIndex] < minDomRank)
-			{
-				minDomRank = domRanks[competitorIndex];
-				winnerIndex = competitorIndex;
-			}
-		}
-		//std::scoped_lock<std::mutex> lock(collectionModMutex);
-		parentIndices.push_back(winnerIndex);
-		//jobScheduler.ScheduleJob(job);
-	}
-	/*jobScheduler.SetPaused(false);
-	jobScheduler.WaitForCompletion();*/
-
-	std::vector<std::unique_ptr<Chromosome>> newPopulation;
-	newPopulation.reserve(chromosomes.size());
-	for (size_t i = 0; i < chromosomes.size(); ++i)
-	{
-		size_t parentIndex_1 = uniformInt(rng);
-		size_t parentIndex_2 = uniformInt(rng);
-
-		if (uniformFloat(rng) < crossoverProbability)
-		{
-			newPopulation.push_back(chromosomes[parentIndices[parentIndex_1]]->Crossover(*chromosomes[parentIndices[parentIndex_2]]));
-			if (uniformFloat(rng) < mutationProbability)
-			{
-				newPopulation.back()->Mutate();
-			}
-		}
-		else
-		{
-			std::uniform_int_distribution<int> coin(0, 1);
-			if (coin(rng) == 0)
-			{
-				newPopulation.push_back(chromosomes[parentIndices[parentIndex_1]]->Clone());
-			}
-			else
-			{
-				newPopulation.push_back(chromosomes[parentIndices[parentIndex_2]]->Clone());
-			}
-		}
+		};
+		jobScheduler.ScheduleJob(job);
+		parentsChosen += chroms;
 	}
 
-	chromosomes = std::move(newPopulation);
+	jobScheduler.WaitForCompletion();	
+	
+	size_t childrenGenerated = 0;
+	for (int i = 0; i < jobCount; ++i)
+	{
+		size_t startIndex = i * chromosomesPerJob;
+		size_t chroms = (i == jobCount - 1) ? chromosomes.size() - childrenGenerated : chromosomesPerJob;
+		auto job = [this, chroms, startIndex, popSize]()
+		{
+			for (size_t counter = 0; counter < chroms; ++counter)
+			{
+				size_t parentIndex_1 = Random::Range<size_t>(0, chromosomes.size() - 1);
+				size_t parentIndex_2 = Random::Range<size_t>(0, chromosomes.size() - 1);
+
+				if (Random::Range(0.0f, 1.0f) < crossoverProbability)
+				{
+					newPopulation[startIndex + counter] = chromosomes[parentIndices[parentIndex_1]]->Crossover(*chromosomes[parentIndices[parentIndex_2]]);
+					if (Random::Range(0.0f, 1.0f) < mutationProbability)
+					{
+						newPopulation[startIndex + counter]->Mutate();
+					}
+				}
+				else
+				{
+					std::uniform_int_distribution<int> coin(0, 1);
+					if (Random::Range(0, 1) == 0)
+					{
+						newPopulation[startIndex + counter] = chromosomes[parentIndices[parentIndex_1]]->Clone();
+					}
+					else
+					{
+						newPopulation[startIndex + counter] = chromosomes[parentIndices[parentIndex_2]]->Clone();
+					}
+				}
+			}
+		};
+		jobScheduler.ScheduleJob(job);
+		childrenGenerated += chroms;
+	}
+	jobScheduler.WaitForCompletion();
+
+	for(size_t i = 0; i < popSize; ++i)
+	{
+		chromosomes[i] = std::move(newPopulation[i]);
+	}
+}
+
+void Population::StopComputation()
+{
+	jobScheduler.Shutdown();
 }
 
 const Chromosome* Population::GetBestChromosome() const
 {
-	auto domRanks = ComputeDominationRanks();
+	ComputeDominationRanks();
 	size_t index;
 	int minDom = static_cast<int>(chromosomes.size());
-	for (size_t i = 0; i < domRanks.size(); ++i)
+	for (size_t i = 0; i < dominationRanks.size(); ++i)
 	{
-		if (domRanks[i] < minDom)
+		if (dominationRanks[i] < minDom)
 		{
-			minDom = domRanks[i];
+			minDom = dominationRanks[i];
 			index = i;
 		}
 	}
@@ -117,20 +124,20 @@ const Chromosome* Population::GetBestChromosome() const
 
 std::vector<const Chromosome*> Population::GetBestChromosomes() const
 {
-	auto domRanks = ComputeDominationRanks();
+	ComputeDominationRanks();
 	int minDom = static_cast<int>(chromosomes.size());
-	for (size_t i = 0; i < domRanks.size(); ++i)
+	for (size_t i = 0; i < dominationRanks.size(); ++i)
 	{
-		if (domRanks[i] < minDom)
+		if (dominationRanks[i] < minDom)
 		{
-			minDom = domRanks[i];
+			minDom = dominationRanks[i];
 		}
 	}
 
 	std::vector<const Chromosome*> result;
-	for (size_t i = 0; i < domRanks.size(); ++i)
+	for (size_t i = 0; i < dominationRanks.size(); ++i)
 	{
-		if (domRanks[i] == minDom)
+		if (dominationRanks[i] == minDom)
 		{
 			result.push_back(chromosomes[i].get());
 		}
@@ -139,10 +146,13 @@ std::vector<const Chromosome*> Population::GetBestChromosomes() const
 	return result;
 }
 
-std::vector<int> Population::ComputeDominationRanks() const
+void Population::ComputeDominationRanks() const
 {	
 	size_t popSize = chromosomes.size();
-	std::vector<int> result(popSize, 0);
+	for (auto& val : dominationRanks)
+	{
+		val = 0;
+	}
 	for (size_t chromosomeIndex_1 = 0; chromosomeIndex_1 < popSize; ++chromosomeIndex_1)
 	{
 		for (size_t chromosomeIndex_2 = chromosomeIndex_1 + 1; chromosomeIndex_2 < popSize; ++chromosomeIndex_2)
@@ -169,13 +179,12 @@ std::vector<int> Population::ComputeDominationRanks() const
 
 			if (isFirstBetter && !isSecondBetter)
 			{
-				++result[chromosomeIndex_2];
+				++dominationRanks[chromosomeIndex_2];
 			}
 			else if (isSecondBetter && !isFirstBetter)
 			{
-				++result[chromosomeIndex_1];
+				++dominationRanks[chromosomeIndex_1];
 			}
 		}
 	}
-	return result;
 }

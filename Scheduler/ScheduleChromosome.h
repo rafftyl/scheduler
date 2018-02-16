@@ -1,16 +1,15 @@
 #pragma once
 #include "../Genetic/Chromosome.h"
 #include <vector>
-#include <random>
+#include "../Genetic/Rand.h"
 
 class ScheduleChromosome : public Chromosome
 {	
 public:
 	int dataSize;
 	std::vector<bool> data;
-	std::mt19937& rng;
 
-	ScheduleChromosome(int dataSize, std::mt19937& rng);
+	ScheduleChromosome(int dataSize);
 	ScheduleChromosome(const ScheduleChromosome& other) = default;
 	~ScheduleChromosome();
 

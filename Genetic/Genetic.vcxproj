@@ -111,6 +111,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -121,11 +122,13 @@
     <ClInclude Include="Chromosome.h" />
     <ClInclude Include="JobSystem.h" />
     <ClInclude Include="Population.h" />
+    <ClInclude Include="Rand.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Chromosome.cpp" />
     <ClCompile Include="JobSystem.cpp" />
     <ClCompile Include="Population.cpp" />
+    <ClCompile Include="Rand.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
