@@ -13,8 +13,13 @@ ScheduleChromosome::~ScheduleChromosome()
 
 void ScheduleChromosome::Mutate()
 {
-	size_t index = Random::Range<size_t>(0, data.size() - 1);
-	data[index] = !data[index];
+	for (size_t i = 0; i < data.size(); ++i)
+	{
+		if (Random::Range(0, 1) == 0)
+		{
+			data[i] = !data[i];
+		}
+	}
 }
 
 std::unique_ptr<Chromosome> ScheduleChromosome::Crossover(const Chromosome& other) const
