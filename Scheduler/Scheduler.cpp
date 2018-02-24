@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <set>
+#include <chrono>
 
 const std::vector<std::string> employeeNames{ "Anna Dlugolecka", "Tatiana", "Irina", "Jana", "Alona" };
 const std::vector<int> maxDaysPerEmployee{ 4, 5, 5, 5, 5 };
@@ -21,8 +22,8 @@ const int employeeCount = static_cast<int>(employeeNames.size());
 const int initDay = 0; //monday
 
 //genetic algorithm params
-const int iterationCount = 200;
-const int populationSize = 300;
+const int iterationCount = 400;
+const int populationSize = 350;
 const int tournamentSize = 7;
 const float mutationProb = 0.05f;
 const float crossoverProb = 0.99f;
@@ -75,7 +76,7 @@ int main()
 				}
 			}			
 
-			skillsLacking += skillsNotFound.size();
+			skillsLacking += static_cast<int>(skillsNotFound.size());
 			int offsetDay = day + initDay;
 			int dayOfAWeek = offsetDay % 7;
 			int needed = staffNeededPerDay[dayOfAWeek];
@@ -97,9 +98,9 @@ int main()
 		for (int emp = 0; emp < employeeCount; ++emp)
 		{
 			int dif = maxDaysPerEmployee[emp] - daysWorked[emp];
-			result.push_back(-dif*dif);
-			result.push_back(-daysOffViolated[emp]);
-			result.push_back(std::min(0, 2 - streaks[emp]));
+			result.push_back(static_cast<float>(-dif*dif));
+			result.push_back(static_cast<float>(-daysOffViolated[emp]));
+			result.push_back(static_cast<float>(std::min(0, 2 - streaks[emp])));
 		}
 	
 		return result;
@@ -108,14 +109,20 @@ int main()
 	int dataSize = workingDayCount * employeeCount;
 	ScheduleChromosome chrom(dataSize);
 	Population pop(populationSize, tournamentSize, chrom, fitness, mutationProb, crossoverProb);
-	
+
+	auto t_1= std::chrono::system_clock::now();
 	for (int i = 0; i < iterationCount; ++i)
 	{
 		pop.Breed();
 	}
-	pop.StopComputation();
+	auto t_2 = std::chrono::system_clock::now();
+	auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(t_2 - t_1);
+	auto ms = milliseconds.count();
+	std::cout << "finished in " << ms << " miliseconds" << std::endl;
 
 	auto chroms = pop.GetBestChromosomes();
+	pop.StopComputation();
+
 	std::sort(chroms.begin(), chroms.end(),
 	[&](const Chromosome* a, const Chromosome* b) -> bool
 	{
@@ -124,8 +131,7 @@ int main()
 
 	size_t chromIndex = 0;
 	while (chromIndex < chroms.size())
-	{
-		system("cls");
+	{		
 		std::cout << "Schedule with " << chroms[chromIndex]->GetOrComputeFitness(fitness)[0] << " days fully covered; "<<
 			-chroms[chromIndex]->GetOrComputeFitness(fitness)[1] << " spurious mandays; " <<
 			-chroms[chromIndex]->GetOrComputeFitness(fitness)[2] << " days without full skillset:" << std::endl;
@@ -142,7 +148,8 @@ int main()
 		else
 		{
 			chromIndex++;
-		}		
+		}	
+		system("cls");
 	}
 
 	std::cout << std::endl << "Finished" << std::endl;

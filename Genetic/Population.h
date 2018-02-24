@@ -18,7 +18,7 @@ private:
 	float mutationProbability;
 	float crossoverProbability;
 
-	JobScheduler jobScheduler;
+	mutable JobScheduler jobScheduler;
 public:
 	Population(int size, int tournamentSize, Chromosome& templateChromosome, FitnessFunction fitnessFunction, float mutationProb = 0.03f, float crossoverProb = 0.8f);
 	Population(const Population& other) = delete;
