@@ -4,15 +4,16 @@
 #include "stdafx.h"
 #include "ScheduleChromosome.h"
 #include "../Genetic/Population.h"
+#include "ScheduleExporter.h"
 #include <iostream>
 #include <sstream>
 #include <set>
 
-const std::vector<std::string> employeeNames{ "emp_1", "emp_2", "emp_3", "emp_4", "emp_5" };
-const std::vector<int> maxDaysPerEmployee{ 5, 5, 5, 5, 4 };
-const std::vector<int> staffNeededPerDay{ 3,3,3,3,4,4,4 };
-const std::vector<std::set<int>> employeeSkills{ {0,1}, {0,1}, {0}, {0}, {0} };
-const std::vector<std::set<int>> daysOff{ {0, 3}, {5, 1}, {}, {2}, {6} };
+const std::vector<std::string> employeeNames{ "Anna Dlugolecka", "Tatiana", "Irina", "Jana", "Alona" };
+const std::vector<int> maxDaysPerEmployee{ 4, 5, 5, 5, 5 };
+const std::vector<int> staffNeededPerDay{ 3,3,3,4,4,4,4 };
+const std::vector<std::set<int>> employeeSkills{ {0}, {0}, {0, 1}, {0}, {0, 1} };
+const std::vector<std::set<int>> daysOff{ {}, {}, {}, {}, {} };
 
 const int workingDayCount = 7;
 const std::set<int> skillsetNeeded{ 0, 1 };
@@ -134,7 +135,9 @@ int main()
 		std::transform(command.begin(), command.end(), command.begin(), tolower);
 		if (command == "export")
 		{
-			//TODO
+			std::cout << "Enter file name: " << std::endl;
+			std::cin >> command;
+			ScheduleExporter::Export(command, static_cast<const ScheduleChromosome*>(chroms[chromIndex])->data, employeeNames, workingDayCount);
 		}
 		else
 		{
