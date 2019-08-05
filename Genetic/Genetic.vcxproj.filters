@@ -27,6 +27,9 @@
     <ClInclude Include="Rand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MemeSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Population.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Rand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemeSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
