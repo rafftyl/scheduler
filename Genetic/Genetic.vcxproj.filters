@@ -18,33 +18,18 @@
     <ClInclude Include="Population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Chromosome.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="JobSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Rand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MemeSet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Population.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Chromosome.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="JobSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Rand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MemeSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
